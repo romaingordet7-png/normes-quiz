@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrainement Normes EDN</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1, h2 { text-align: center; color: var(--primary); }
+        
+        /* Form Elements */
+        input[type="number"], input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        button:hover { background-color: #1d4ed8; }
+        button.secondary { background-color: #4b5563; }
+        button.success { background-color: var(--success); }
+        button.danger { background-color: var(--danger); }
+        button.outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); }
+
+        /* Quiz Specifics */
+        .tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .unit-display {
+            font-weight: bold;
+            color: #6b7280;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .qcm-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .feedback-area {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: #fdf2f8; /* Light red/pink bg for emphasis */
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .feedback-correct { background: #dcfce7; }
+
+        .precision {
+            font-size: 0.9em;
+            color: #4b5563;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .hidden { display: none; }
+
+        /* Database Editor */
+        #db-editor { margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 20px; }
+        #json-area { height: 150px; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>EDN : Normes Biologiques</h1>
+
+    <div id="setup-screen" class="card">
+        <h2>Configuration</h2>
+        <p>Il y a <span id="total-questions-count">0</span> normes dans la base.</p>
+        <label>Combien de questions voulez-vous ?</label>
+        <input type="number" id="num-questions" min="1" value="10">
+        <button onclick="startQuiz()">Lancer le Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="card hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="tag" id="q-category">Catégorie</span>
+            <small id="progress-indicator">1 / 10</small>
+        </div>
+        
+        <h3 id="q-text" style="margin: 15px 0;">Question ici</h3>
+        <span class="unit-display">Unité : <span id="q-unit">g/L</span></span>
+
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Entrez la valeur (ex: 135-145)">
+            <button onclick="checkAnswer()">Valider ma réponse</button>
+            <button class="outline" onclick="switchToQCM()">Je bloque : Demander un QCM</button>
+        </div>
+
+        <div id="qcm-area" class="hidden">
+            <p style="font-size:0.9em; color:#666;">Choisissez la bonne réponse :</p>
+            <div class="qcm-options" id="qcm-buttons">
+                </div>
+        </div>
+
+        <div id="feedback-area" class="hidden">
+            <h3>Résultat</h3>
+            <p><strong>Norme attendue :</strong> <span id="correct-answer" style="font-size:1.2em;"></span></p>
+            <div class="precision">
+                <strong>Précisions / Seuil patho :</strong><br>
+                <span id="q-details"></span>
+            </div>
+            
+            <p style="margin-top:15px; text-align:center;">Avez-vous eu juste ?</p>
+            <div style="display:flex; gap:10px;">
+                <button class="danger" onclick="rateAnswer(false)">Non (Revoir)</button>
+                <button class="success" onclick="rateAnswer(true)">Oui (Validé)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-screen" class="card hidden">
+        <h2>Quiz Terminé !</h2>
+        <p style="text-align:center; font-size:1.5em;">Score : <span id="final-score"></span></p>
+        <button onclick="location.reload()">Recommencer</button>
+    </div>
+
+    <div id="db-editor" class="container">
+        <button class="secondary" onclick="toggleDbEditor()">🛠️ Modifier / Ajouter des questions (JSON)</button>
+        <div id="editor-content" class="hidden">
+            <p>Copiez ce texte pour sauvegarder vos questions, ou collez-en de nouvelles. Assurez-vous de garder le format JSON valide.</p>
+            <textarea id="json-area"></textarea>
+            <button class="success" onclick="saveJsonData()">Mettre à jour la base pour cette session</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- DONNÉES INITIALES (EXHAUSTIVE SELON VOTRE DEMANDE) ---
+    const defaultData = [
+        // HEMATOLOGIE
+        { cat: "Hématologie", param: "Hémoglobine (Hb)", unit: "g/dL", val: "H: 13-18 / F: 12-16", details: "Anémie : <13 (H), <12 (F). Femme enceinte T2 : >10.5. Transfusion si <7." },
+        { cat: "Hématologie", param: "VGM", unit: "fL", val: "80 - 100", details: "Microcytose < 80, Macrocytose > 100" },
+        { cat: "Hématologie", param: "Réticulocytes", unit: "G/L", val: "20 - 120", details: "Arégénératif si < 150 en contexte d'anémie" },
+        { cat: "Hématologie", param: "Plaquettes", unit: "G/L", val: "150 - 400", details: "Thrombopénie < 150. Risque hémorragique grave < 20-50" },
+        { cat: "Hématologie", param: "Leucocytes", unit: "G/L", val: "4 - 10", details: "Leucopénie < 4. Hyperleucocytose > 10" },
+        { cat: "Hématologie", param: "PNN (Neutrophiles)", unit: "G/L", val: "1.5 - 7", details: "Neutropénie < 1.5. Agranulocytose < 0.5 (Urgence)" },
+        { cat: "Hématologie", param: "Lymphocytes", unit: "G/L", val: "1.5 - 4", details: "Lymphopénie < 1.5. Hyperlymphocytose > 4" },
+        { cat: "Hématologie", param: "Eosinophiles", unit: "G/L", val: "< 0.5", details: "Hyperéosinophilie > 0.5" },
+        
+        // HEMOSTASE
+        { cat: "Hémostase", param: "TP (Taux de Prothrombine)", unit: "%", val: "70 - 100", details: "Signe d'insuffisance hépatique si < 50%" },
+        { cat: "Hémostase", param: "TCA (Ratio)", unit: "Ratio M/T", val: "< 1.2", details: "Allongé si > 1.2. Surveillance HNF : cible 2-3" },
+        { cat: "Hémostase", param: "INR (Patient non traité)", unit: "Sans unité", val: "1", details: "Cible AVK std: 2-3. Valve méca: 2.5-3.5. Surdosage > 5" },
+        { cat: "Hémostase", param: "Fibrinogène", unit: "g/L", val: "2 - 4", details: "Sd Inflammatoire > 4. CIVD/Insuf Hépatique < 1" },
+        { cat: "Hémostase", param: "D-Dimères", unit: "ng/mL (ou µg/L)", val: "< 500", details: "Seuil d'exclusion EP/TVP. Si >50 ans : Âge x 10" },
+
+        // IONOGRAMME
+        { cat: "Ionogramme", param: "Sodium (Natrémie)", unit: "mmol/L", val: "135 - 145", details: "Hyponatrémie sévère < 120-125" },
+        { cat: "Ionogramme", param: "Potassium (Kaliémie)", unit: "mmol/L", val: "3.5 - 4.5", details: "Hypo < 3.5. Hyper menaçante > 6.0 (ECG !)" },
+        { cat: "Ionogramme", param: "Chlore", unit: "mmol/L", val: "98 - 108", details: "Suit souvent le sodium" },
+        { cat: "Ionogramme", param: "Bicarbonates (HCO3)", unit: "mmol/L", val: "22 - 28", details: "Acidose métabolique si < 22" },
+        { cat: "Ionogramme", param: "Calcium Total", unit: "mmol/L", val: "2.20 - 2.60", details: "Hypercalcémie menaçante > 3.0" },
+        { cat: "Ionogramme", param: "Phosphore", unit: "mmol/L", val: "0.8 - 1.45", details: "Hyperphosphatémie fréquente dans l'IRC" },
+        { cat: "Ionogramme", param: "Magnésium", unit: "mmol/L", val: "0.75 - 1.0", details: "Hypomagnésémie < 0.7 (cause d'hypokaliémie réfractaire)" },
+
+        // RENAL
+        { cat: "Néphrologie", param: "Créatinine", unit: "µmol/L", val: "60 - 110", details: "Variable selon masse musculaire. Utiliser le DFG (CKD-EPI)" },
+        { cat: "Néphrologie", param: "DFG (Filtration Glomérulaire)", unit: "mL/min/1.73m²", val: "> 90", details: "IRC stade 3 < 60. Terminale < 15" },
+        { cat: "Néphrologie", param: "Urée", unit: "mmol/L", val: "2.5 - 7.5", details: "Augmente en cas de déshydratation ou catabolisme" },
+        { cat: "Néphrologie", param: "Protéinurie des 24h", unit: "g/24h", val: "< 0.15", details: "Pathologique > 0.15. Sd Néphrotique > 3 g/24h" },
+        { cat: "Néphrologie", param: "Microalbuminurie", unit: "mg/24h", val: "< 30", details: "Stade microalb diabétique : 30 - 300" },
+
+        // HEPATO-GASTRO
+        { cat: "Hépato", param: "Transaminases (ASAT/ALAT)", unit: "UI/L", val: "< 30-50", details: "Cytolyse > 1N. Hépatite aiguë > 10N" },
+        { cat: "Hépato", param: "Gamma-GT (GGT)", unit: "UI/L", val: "< 50", details: "Marqueur cholestase ou alcoolisme" },
+        { cat: "Hépato", param: "Phosphatases Alcalines (PAL)", unit: "UI/L", val: "40 - 130", details: "Cholestase > 1N (aussi origine osseuse)" },
+        { cat: "Hépato", param: "Bilirubine Totale", unit: "µmol/L", val: "< 17", details: "Ictère clinique visible si > 40-50" },
+        { cat: "Hépato", param: "Bilirubine Conjuguée", unit: "µmol/L", val: "< 5", details: "Signe une cholestase ou un défaut d'excrétion" },
+        { cat: "Hépato", param: "Albumine", unit: "g/L", val: "38 - 48", details: "Dénutrition/Inflammation < 35. Sd Néphrotique < 30" },
+        { cat: "Hépato", param: "Lipase", unit: "UI/L", val: "< 60", details: "Pancréatite Aiguë si > 3N + douleur typique" },
+        { cat: "Hépato", param: "Ammoniémie", unit: "µmol/L", val: "10 - 50", details: "En cas d'encéphalopathie hépatique" },
+
+        // INFLAMMATION
+        { cat: "Inflammation", param: "CRP", unit: "mg/L", val: "< 5", details: "Syndrome inflammatoire > 5-10" },
+        { cat: "Inflammation", param: "Procalcitonine (PCT)", unit: "µg/L", val: "< 0.1", details: "Infection bact probable > 0.5. Choc septique > 2" },
+        { cat: "Inflammation", param: "Vitesse de sédimentation (VS)", unit: "mm à 1h", val: "< Âge / 2 (H)", details: "Marqueur lent de l'inflammation" },
+
+        // METABOLISME & CARDIO
+        { cat: "Métabolisme", param: "Glycémie à jeun", unit: "g/L", val: "0.70 - 1.10", details: "Diabète ≥ 1.26 (2 fois). Intolérance 1.10-1.25" },
+        { cat: "Métabolisme", param: "HbA1c", unit: "%", val: "4 - 6", details: "Diabète ≥ 6.5%. Cible thérapeutique classique ≤ 7%" },
+        { cat: "Métabolisme", param: "LDL-Cholestérol", unit: "g/L", val: "Dépend du risque", details: "Risque très élevé < 0.55. Élevé < 0.70. Modéré < 1.0" },
+        { cat: "Métabolisme", param: "HDL-Cholestérol", unit: "g/L", val: "> 0.40", details: "Facteur protecteur si > 0.60" },
+        { cat: "Métabolisme", param: "Triglycérides", unit: "g/L", val: "< 1.50", details: "Risque pancréatite majeure si > 10 g/L (5g/L selon ref)" },
+        { cat: "Rhumato", param: "Acide Urique", unit: "µmol/L", val: "H: 180-420 / F: 150-360", details: "Seuil de saturation = 420 µmol/L (68 mg/L)" },
+        { cat: "Cardio", param: "Troponine", unit: "ng/L", val: "< Seuil Labo (ex: 14)", details: "SCA : Cinétique d'ascension/décroissance > 20-50%" },
+        { cat: "Cardio", param: "BNP", unit: "ng/L", val: "< 100", details: "IC aiguë très probable > 400. Peu probable < 100" },
+        { cat: "Cardio", param: "NT-proBNP", unit: "ng/L", val: "< 300", details: "IC aiguë très probable (seuil selon âge: 450/900/1800)" },
+
+        // GAZ DU SANG
+        { cat: "Pneumo/Réa", param: "pH artériel", unit: "-", val: "7.38 - 7.42", details: "Acidose < 7.38. Alcalose > 7.42" },
+        { cat: "Pneumo/Réa", param: "PaO2", unit: "mmHg", val: "80 - 100", details: "Hypoxémie < 80. Insuffisance respi grave < 60" },
+        { cat: "Pneumo/Réa", param: "PaCO2", unit: "mmHg", val: "38 - 42", details: "Hypocapnie < 38. Hypercapnie > 42" },
+        { cat: "Pneumo/Réa", param: "Lactates", unit: "mmol/L", val: "< 2.0", details: "Signe d'hypoperfusion/choc > 2.0" },
+
+        // ENDOCRINO
+        { cat: "Endocrino", param: "TSH", unit: "mUI/L", val: "0.4 - 4.0", details: "Hypothyroïdie > 4. Hyperthyroïdie < 0.4" },
+        { cat: "Endocrino", param: "T4 Libre", unit: "pmol/L", val: "10 - 25", details: "Confirme le diagnostic si TSH anormale" },
+        { cat: "Endocrino", param: "Cortisol (8h)", unit: "nmol/L", val: "275 - 550", details: "Insuffisance surrénale très probable < 138" },
+        { cat: "Endocrino", param: "PTH", unit: "ng/L", val: "10 - 65", details: "Hyperparathyroïdie si > 65 avec Calcémie N ou haute" },
+        { cat: "Endocrino", param: "Vitamine D", unit: "ng/mL", val: "30 - 60", details: "Insuffisance < 30. Carence < 10" },
+        { cat: "Endocrino", param: "Prolactine", unit: "ng/mL", val: "< 20", details: "Macroprolactinome souvent > 150-200" },
+
+        // LIQUIDES
+        { cat: "Neuro/Rhumato", param: "LCR (Cellules)", unit: "Elts/mm³", val: "< 5", details: "Méningite > 5-10. Formule panachée = listériose ?" },
+        { cat: "Neuro", param: "LCR (Protéinorachie)", unit: "g/L", val: "< 0.40", details: "Augmentée dans méningites et Guillain-Barré" },
+        { cat: "Neuro", param: "LCR (Glycorachie)", unit: "mmol/L", val: "> 2/3 Glycémie", details: "Hypoglycorachie = Bactérie ou Tuberculose" },
+        { cat: "Rhumato", param: "Liquide Articulaire", unit: "Elts/mm³", val: "< 2000", details: "Mécanique < 2000. Inflammatoire > 2000. Septique > 50 000" },
+        { cat: "Hépato", param: "Liquide d'Ascite (PNN)", unit: "Elts/mm³", val: "< 250", details: "Infection du liquide d'ascite si PNN > 250" },
+        { cat: "Pneumo", param: "Liquide Pleural (Protides)", unit: "g/L", val: "< 25 (Transsudat)", details: "Exsudat si Protides > 35 (ou ratio > 0.5)" }
+    ];
+
+    // --- VARIABLES GLOBALES ---
+    let questions = []; // La base active
+    let currentQuiz = []; // Les questions sélectionnées pour la session
+    let currentIndex = 0;
+    let score = 0;
+    let inReviewMode = false; // Est-ce qu'on est en train de lire la réponse ?
+
+    // Initialisation
+    window.onload = function() {
+        // Charger depuis localStorage si dispo, sinon defaut
+        const stored = localStorage.getItem('edn_quiz_data');
+        if (stored) {
+            questions = JSON.parse(stored);
+        } else {
+            questions = JSON.parse(JSON.stringify(defaultData));
+        }
+        
+        document.getElementById('total-questions-count').innerText = questions.length;
+        document.getElementById('json-area').value = JSON.stringify(questions, null, 2);
+    };
+
+    // --- LOGIQUE DU QUIZ ---
+
+    function startQuiz() {
+        const n = parseInt(document.getElementById('num-questions').value);
+        if (n < 1) return alert("Il faut au moins 1 question !");
+
+        // Mélanger et couper
+        const shuffled = [...questions].sort(() => 0.5 - Math.random());
+        currentQuiz = shuffled.slice(0, Math.min(n, questions.length));
+        
+        currentIndex = 0;
+        score = 0;
+        
+        // UI Switch
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        showQuestion();
+    }
+
+    function showQuestion() {
+        inReviewMode = false;
+        const q = currentQuiz[currentIndex];
+        
+        document.getElementById('progress-indicator').innerText = `${currentIndex + 1} / ${currentQuiz.length}`;
+        document.getElementById('q-category').innerText = q.cat;
+        document.getElementById('q-text').innerText = `Quelle est la norme pour : ${q.param} ?`;
+        document.getElementById('q-unit').innerText = q.unit;
+        
+        // Reset UI
+        document.getElementById('user-input').value = "";
+        document.getElementById('input-area').classList.remove('hidden');
+        document.getElementById('qcm-area').classList.add('hidden');
+        document.getElementById('feedback-area').classList.add('hidden');
+        document.getElementById('feedback-area').className = "feedback-area"; // reset colors
+        
+        // Focus input
+        document.getElementById('user-input').focus();
+    }
+
+    function checkAnswer() {
+        if(inReviewMode) return; // Eviter double click
+        inReviewMode = true;
+
+        const q = currentQuiz[currentIndex];
+        
+        // Afficher la réponse
+        document.getElementById('input-area').classList.add('hidden');
+        document.getElementById('qcm-area').classList.add('hidden');
+        document.getElementById('feedback-area').classList.remove('hidden');
+        
+        document.getElementById('correct-answer').innerText = q.val;
+        document.getElementById('q-details').innerText = q.details;
+    }
+
+    function switchToQCM() {
+        const q = currentQuiz[currentIndex];
+        const container = document.getElementById('qcm-buttons');
+        container.innerHTML = "";
+        document.getElementById('input-area').classList.add('hidden');
+        document.getElementById('qcm-area').classList.remove('hidden');
+
+        // Générer distracteurs
+        let options = [q.val];
+        
+        // Essayer de trouver des distracteurs dans la même catégorie
+        const sameCat = questions.filter(x => x.cat === q.cat && x.val !== q.val);
+        
+        // Si on a assez de questions dans la catégorie, on en prend aléatoirement
+        while (options.length < 4) {
+            let distractor;
+            if (sameCat.length > 0 && Math.random() > 0.3) {
+                // Prendre une réponse d'une autre question de la catégorie
+                const randQ = sameCat[Math.floor(Math.random() * sameCat.length)];
+                distractor = randQ.val;
+            } else {
+                // Générer un distracteur numérique si possible
+                distractor = generateNumericDistractor(q.val);
+            }
+            
+            if (!options.includes(distractor)) {
+                options.push(distractor);
+            }
+        }
+
+        // Mélanger les options
+        options.sort(() => 0.5 - Math.random());
+
+        // Créer les boutons
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "secondary";
+            btn.innerText = opt;
+            btn.onclick = () => {
+                // Mode QCM : on ne valide pas auto, on affiche juste la correction ensuite
+                checkAnswer();
+                // Petit feedback visuel immédiat si c'est le bon bouton cliqué (bonus)
+                if(opt === q.val) document.getElementById('feedback-area').classList.add('feedback-correct');
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function generateNumericDistractor(correctVal) {
+        // Logique simpliste pour tromper l'oeil : extraire le premier nombre et le modifier
+        const match = correctVal.match(/\d+(\.\d+)?/);
+        if (match) {
+            const num = parseFloat(match[0]);
+            const factor = (Math.random() < 0.5) ? 0.7 : 1.3; // -30% ou +30%
+            let newNum = (num * factor).toFixed(match[1] ? 1 : 0); // Garder décimale
+            return correctVal.replace(match[0], newNum);
+        }
+        return "Autre valeur"; // Fallback
+    }
+
+    function rateAnswer(isCorrect) {
+        if (isCorrect) score++;
+        
+        currentIndex++;
+        if (currentIndex < currentQuiz.length) {
+            showQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function finishQuiz() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = `${score} / ${currentQuiz.length}`;
+        
+        let msg = "";
+        const pct = score / currentQuiz.length;
+        if(pct === 1) msg = "Parfait ! Prêt pour l'EDN ! 🥇";
+        else if(pct > 0.7) msg = "Très solide ! Encore un petit effort.";
+        else if(pct > 0.5) msg = "Pas mal, mais attention aux seuils critiques.";
+        else msg = "À revoir sérieusement. Courage !";
+        
+        // Ajouter le message sous le score
+        const p = document.createElement('p');
+        p.innerText = msg;
+        document.getElementById('result-screen').appendChild(p);
+    }
+
+    // --- GESTION JSON ---
+    function toggleDbEditor() {
+        const el = document.getElementById('editor-content');
+        el.classList.toggle('hidden');
+    }
+
+    function saveJsonData() {
+        try {
+            const txt = document.getElementById('json-area').value;
+            const newData = JSON.parse(txt);
+            if (!Array.isArray(newData)) throw new Error("Doit être un tableau []");
+            
+            questions = newData;
+            localStorage.setItem('edn_quiz_data', JSON.stringify(questions));
+            document.getElementById('total-questions-count').innerText = questions.length;
+            alert("Base de données mise à jour et sauvegardée !");
+            toggleDbEditor();
+        } catch (e) {
+            alert("Erreur JSON : " + e.message);
+        }
+    }
+</script>
+
+</body>
+</html>
