@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDN : Mode Survie & Online</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --gold: #fbbf24;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 600px; width: 100%; }
+
+        /* Setup Screen */
+        #setup-screen {
+            text-align: center;
+        }
+        
+        /* Leaderboard */
+        .leaderboard {
+            margin-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+        }
+        .lb-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .lb-rank { font-weight: bold; width: 30px; }
+        .lb-name { flex-grow: 1; }
+        .lb-score { font-weight: bold; color: var(--primary); }
+        .medal-1 { color: #eab308; } /* Or */
+        .medal-2 { color: #94a3b8; } /* Argent */
+        .medal-3 { color: #b45309; } /* Bronze */
+
+        /* Score Board Game */
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .score-box {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+            min-width: 80px;
+        }
+        .score-val { font-size: 1.5em; display: block; }
+        .streak-fire { color: orange; }
+
+        /* Card Styles */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* Inputs */
+        input[type="text"] {
+            width: 100%; padding: 14px;
+            border: 2px solid #e2e8f0; border-radius: 10px;
+            font-size: 18px; outline: none; box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        button {
+            width: 100%; padding: 15px;
+            background-color: var(--primary); color: white;
+            border: none; border-radius: 10px;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-continue { background-color: #334155; display: none; margin-top: 10px; }
+
+        .hidden { display: none; }
+        
+        /* Feedback */
+        .feedback {
+            margin-top: 20px; padding: 15px; border-radius: 8px; display: none;
+        }
+        .feedback.success { background: #dcfce7; color: #166534; }
+        .feedback.error { background: #fee2e2; color: #991b1b; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-animation { animation: shake 0.4s ease-in-out; border: 2px solid #ef4444 !important; }
+
+        .loading { font-style: italic; color: #64748b; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="setup-screen" class="card">
+        <h1>EDN : Online Mode</h1>
+        <p>Préparez-vous à entrer dans l'arène.</p>
+        
+        <label style="display:block; text-align:left; font-weight:bold; margin-bottom:5px;">Votre Pseudo :</label>
+        <input type="text" id="pseudo-input" placeholder="Dr. House" maxlength="15">
+        
+        <button onclick="startGame()">Commencer la session</button>
+
+        <div class="leaderboard">
+            <h3>🌍 Top 10 Mondial</h3>
+            <div id="leaderboard-list">
+                <p class="loading">Chargement des scores...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden">
+        <div class="score-board">
+            <div class="score-box">
+                <span>🔥 Série</span>
+                <span class="score-val streak-fire" id="current-streak">0</span>
+            </div>
+            <div class="score-box">
+                <span>👤 Moi</span>
+                <span class="score-val" id="my-best">0</span>
+            </div>
+        </div>
+
+        <div id="quiz-card" class="card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <small id="q-cat" style="color:#64748b; font-weight:bold; text-transform:uppercase;">Catégorie</small>
+            </div>
+            
+            <h3 id="q-title" style="margin-top:0;">Chargement...</h3>
+            <span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:0.9em;" id="q-unit">Unité</span>
+            <p style="font-size:0.9em; color:#666; margin-bottom:20px;">Entrez les valeurs (tolérance 1%)</p>
+
+            <div id="dynamic-inputs"></div>
+
+            <button id="btn-validate" onclick="validateAnswer()">VALIDER</button>
+            <button id="btn-continue" class="btn-continue" onclick="nextQuestion()">CONTINUER</button>
+
+            <div id="feedback-msg" class="feedback"></div>
+        </div>
+        
+        <button onclick="location.reload()" style="background-color:#94a3b8; margin-top:20px;">Quitter / Revenir au menu</button>
+    </div>
+
+</div>
+
+<script type="module">
+    // ------------------------------------------------------------------
+    // 1. CONFIGURATION FIREBASE
+    // ------------------------------------------------------------------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    // --- COLLE TA CONFIG FIREBASE ICI (REMPLACE TOUT LE BLOC) ---
+    const firebaseConfig = {
+  apiKey: "AIzaSyBR8tntIiAHbdUNwE8rAeJj0yVxc3XwF9g",
+  authDomain: "normes-quiz.firebaseapp.com",
+  projectId: "normes-quiz",
+  storageBucket: "normes-quiz.firebasestorage.app",
+  messagingSenderId: "975453872619",
+  appId: "1:975453872619:web:70437a05c31d78ebab79ae"
+};
+    // -----------------------------------------------------------
+
+    // Initialisation
+    let db;
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("Firebase connecté !");
+        loadLeaderboard(); // Charger le top 10 au démarrage
+    } catch (e) {
+        console.error("Erreur Firebase (Avez-vous mis la config ?) :", e);
+        document.getElementById('leaderboard-list').innerHTML = "<p style='color:red'>Erreur de connexion base de données.<br>Vérifiez le code source.</p>";
+    }
+
+    // --- FONCTIONS ONLINE ---
+
+    // 1. Charger le Leaderboard
+    async function loadLeaderboard() {
+        if (!db) return;
+        const listDiv = document.getElementById('leaderboard-list');
+        
+        try {
+            const q = query(collection(db, "scores"), orderBy("score", "desc"), limit(10));
+            const querySnapshot = await getDocs(q);
+            
+            let html = "";
+            let rank = 1;
+            
+            if (querySnapshot.empty) {
+                html = "<p>Aucun score pour le moment. Soyez le premier !</p>";
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let medal = "";
+                    if (rank === 1) medal = "🥇";
+                    else if (rank === 2) medal = "🥈";
+                    else if (rank === 3) medal = "🥉";
+                    
+                    html += `
+                        <div class="lb-row">
+                            <span class="lb-rank">${medal || rank + '.'}</span>
+                            <span class="lb-name">${escapeHtml(data.pseudo)}</span>
+                            <span class="lb-score">${data.score}</span>
+                        </div>
+                    `;
+                    rank++;
+                });
+            }
+            listDiv.innerHTML = html;
+        } catch (e) {
+            console.error("Erreur lecture scores:", e);
+            listDiv.innerHTML = "<p>Impossible de charger les scores.</p>";
+        }
+    }
+
+    // 2. Sauvegarder un score
+    window.saveScoreToDb = async function(pseudo, score) {
+        if (!db) return;
+        // On ne sauvegarde que si le score est significatif (> 2) pour pas polluer la DB
+        if (score < 3) return; 
+
+        try {
+            await addDoc(collection(db, "scores"), {
+                pseudo: pseudo,
+                score: score,
+                date: new Date()
+            });
+            console.log("Score sauvegardé en ligne !");
+        } catch (e) {
+            console.error("Erreur sauvegarde:", e);
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return "Anonyme";
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+</script>
+
+<script>
+    // --- LOGIQUE DU JEU (LOCALE) ---
+    
+    // Données (Exhaustif pour test)
+const questions = [
+        { cat: "Hématologie", param: "Hémoglobine (Hb)", unit: "g/dL", inputs: [{ label: "Homme", targets: [13, 18] }, { label: "Femme", targets: [12, 16] }], info: "Anémie : <13 (H), <12 (F)." },
+        { cat: "Hématologie", param: "VGM", unit: "fL", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Microcytose < 80, Macrocytose > 100" },
+        { cat: "Hématologie", param: "Plaquettes", unit: "G/L", inputs: [{ label: "Valeur", targets: [150, 400] }], info: "Thrombopénie < 150" },
+        { cat: "Hématologie", param: "Leucocytes", unit: "G/L", inputs: [{ label: "Valeur", targets: [4, 10] }], info: "PNN : 1.5 - 7 G/L" },
+        { cat: "Hémostase", param: "TP", unit: "%", inputs: [{ label: "Valeur", targets: [70, 100] }], info: "Insuffisance hépatique si < 50%" },
+        { cat: "Hémostase", param: "INR (Patient sain)", unit: "-", inputs: [{ label: "Valeur", targets: [1] }], info: "Cible AVK : 2-3" },
+        { cat: "Hémostase", param: "Fibrinogène", unit: "g/L", inputs: [{ label: "Valeur", targets: [2, 4] }], info: "CIVD si < 1" },
+        { cat: "Ionogramme", param: "Sodium (Natrémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [135, 145] }], info: "Hyponatrémie grave < 120" },
+        { cat: "Ionogramme", param: "Potassium (Kaliémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [3.5, 4.5] }], info: "Hyperkaliémie menaçante > 6.0" },
+        { cat: "Ionogramme", param: "Calcium Total", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [2.20, 2.60] }], info: "Hypercalcémie > 2.60" },
+        { cat: "Ionogramme", param: "Bicarbonates (HCO3-)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [22, 28] }], info: "Acidose si < 22" },
+        { cat: "Néphrologie", param: "Créatinine", unit: "µmol/L", inputs: [{ label: "Valeur", targets: [60, 110] }], info: "Selon masse musculaire" },
+        { cat: "Néphrologie", param: "DFG", unit: "mL/min", inputs: [{ label: "Normal si >", targets: [90] }], info: "IRC < 60" },
+        { cat: "Hépato", param: "ASAT / ALAT", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [40] }], info: "Cytolyse > 1N" },
+        { cat: "Hépato", param: "Bilirubine Totale", unit: "µmol/L", inputs: [{ label: "Seuil max", targets: [17] }], info: "Ictère visible > 40" },
+        { cat: "Hépato", param: "Lipase", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [60] }], info: "Pancréatite si > 3N" },
+        { cat: "Métabolisme", param: "Glycémie à jeun", unit: "g/L", inputs: [{ label: "Valeur", targets: [0.70, 1.10] }], info: "Diabète si 1.26 (x2)" },
+        { cat: "Métabolisme", param: "HbA1c", unit: "%", inputs: [{ label: "Valeur", targets: [4, 6] }], info: "Diabète si > 6.5%" },
+        { cat: "Inflammation", param: "CRP", unit: "mg/L", inputs: [{ label: "Seuil max", targets: [5] }], info: "Sd Inflammatoire si > 5" },
+        { cat: "GDS", param: "pH artériel", unit: "-", inputs: [{ label: "Valeur", targets: [7.38, 7.42] }], info: "7.40 +/- 0.02" },
+        { cat: "GDS", param: "PaO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Hypoxémie < 80" },
+        { cat: "GDS", param: "PaCO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [38, 42] }], info: "Cible 40" },
+        { cat: "Endocrino", param: "TSH", unit: "mUI/L", inputs: [{ label: "Valeur", targets: [0.4, 4.0] }], info: "Hypothyroïdie > 4" },
+        { cat: "Liquides", param: "LCR (Protéinorachie)", unit: "g/L", inputs: [{ label: "Seuil max", targets: [0.45] }], info: "Hyperprotéinorachie > 0.45" }
+    ];
+
+    let currentQ = null;
+    let streak = 0;
+    let pseudo = "";
+
+    function startGame() {
+        const pInput = document.getElementById('pseudo-input');
+        if (pInput.value.trim().length < 2) {
+            alert("Entrez un pseudo valide !");
+            return;
+        }
+        pseudo = pInput.value.trim();
+        
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        
+        nextQuestion();
+    }
+
+let questionPool = []; // Le sac de questions
+
+    function nextQuestion() {
+        // Reset de l'interface
+        document.getElementById('quiz-card').classList.remove('shake-animation');
+        document.getElementById('btn-validate').style.display = 'block';
+        document.getElementById('btn-continue').style.display = 'none';
+        document.getElementById('feedback-msg').style.display = 'none';
+        document.getElementById('feedback-msg').className = 'feedback';
+        document.getElementById('dynamic-inputs').innerHTML = '';
+
+        // Si le sac est vide, on le remplit et on le mélange
+        if (questionPool.length === 0) {
+            questionPool = [...questions];
+            // Mélange de Fisher-Yates
+            for (let i = questionPool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionPool[i], questionPool[j]] = [questionPool[j], questionPool[i]];
+            }
+        }
+
+        // On pioche la dernière question du sac
+        currentQ = questionPool.pop();
+        
+        // Affichage de la question
+        document.getElementById('q-cat').innerText = currentQ.cat;
+        document.getElementById('q-title').innerText = currentQ.param;
+        document.getElementById('q-unit').innerText = currentQ.unit;
+
+        const container = document.getElementById('dynamic-inputs');
+        currentQ.inputs.forEach((inp, index) => {
+            const group = document.createElement('div');
+            group.style.marginBottom = "10px";
+            const label = document.createElement('label');
+            label.innerText = inp.label;
+            label.style.display = "block";
+            label.style.fontWeight = "bold";
+            const field = document.createElement('input');
+            field.type = 'text';
+            field.id = `input-${index}`;
+            field.autocomplete = 'off';
+            field.addEventListener("keypress", (e) => { if (e.key === "Enter") validateAnswer(); });
+            group.appendChild(label);
+            group.appendChild(field);
+            container.appendChild(group);
+        });
+        
+        setTimeout(() => document.getElementById('input-0').focus(), 100);
+    }
+
+    function validateAnswer() {
+        let allCorrect = true;
+        let correctionHTML = "";
+
+        currentQ.inputs.forEach((inp, index) => {
+            const userValStr = document.getElementById(`input-${index}`).value;
+            const userNumbers = extractNumbers(userValStr);
+            const targets = inp.targets;
+            
+            let fieldCorrect = false;
+            
+            if (userNumbers.length >= targets.length) {
+                let matchesFound = 0;
+                targets.forEach(t => {
+                    if (userNumbers.some(u => isCloseEnough(u, t))) matchesFound++;
+                });
+                if (matchesFound === targets.length) fieldCorrect = true;
+            }
+
+            if (!fieldCorrect) allCorrect = false;
+            correctionHTML += `<div>${inp.label} : <b>${targets.join(' - ')}</b></div>`;
+        });
+
+        handleResult(allCorrect, correctionHTML);
+    }
+
+    function handleResult(isSuccess, details) {
+        const fb = document.getElementById('feedback-msg');
+        fb.style.display = 'block';
+
+        if (isSuccess) {
+            streak++;
+            document.getElementById('current-streak').innerText = streak;
+            document.getElementById('my-best').innerText = Math.max(streak, parseInt(document.getElementById('my-best').innerText));
+            
+            fb.className = 'feedback success';
+            fb.innerHTML = `<strong>✅ Correct !</strong><br>${currentQ.info}`;
+        } else {
+            // SAUVEGARDE EN LIGNE (FIN DE SERIE)
+            if (window.saveScoreToDb && streak > 0) {
+                window.saveScoreToDb(pseudo, streak);
+            }
+            
+            streak = 0;
+            document.getElementById('current-streak').innerText = 0;
+            document.getElementById('quiz-card').classList.add('shake-animation');
+            
+            fb.className = 'feedback error';
+            fb.innerHTML = `<strong>❌ Perdu !</strong><br>${details}<br><em>${currentQ.info}</em>`;
+        }
+
+        document.getElementById('btn-validate').style.display = 'none';
+        document.getElementById('btn-continue').style.display = 'block';
+        document.getElementById('btn-continue').focus();
+    }
+
+    function extractNumbers(str) {
+        if (!str) return [];
+        const normalized = str.replace(',', '.');
+        const matches = normalized.match(/-?\d+(\.\d+)?/g);
+        return matches ? matches.map(Number) : [];
+    }
+
+    function isCloseEnough(val, target) {
+        if (target === 0) return Math.abs(val) < 0.1;
+        return Math.abs(val - target) <= Math.abs(target * 0.01);
+    }
+</script>
+
+</body>
+</html>
