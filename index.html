@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDN : Mode Survie</title>
+    <title>EDN : Mode Survie & Online</title>
     <style>
         :root {
             --primary: #2563eb;
-            --success: #16a34a;
-            --danger: #ef4444;
             --bg: #f8fafc;
             --card: #ffffff;
             --text: #0f172a;
+            --gold: #fbbf24;
         }
 
         body {
@@ -28,7 +27,31 @@
 
         .container { max-width: 600px; width: 100%; }
 
-        /* Score Board */
+        /* Setup Screen */
+        #setup-screen {
+            text-align: center;
+        }
+        
+        /* Leaderboard */
+        .leaderboard {
+            margin-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+        }
+        .lb-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .lb-rank { font-weight: bold; width: 30px; }
+        .lb-name { flex-grow: 1; }
+        .lb-score { font-weight: bold; color: var(--primary); }
+        .medal-1 { color: #eab308; } /* Or */
+        .medal-2 { color: #94a3b8; } /* Argent */
+        .medal-3 { color: #b45309; } /* Bronze */
+
+        /* Score Board Game */
         .score-board {
             display: flex;
             justify-content: space-between;
@@ -41,6 +64,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             text-align: center;
+            min-width: 80px;
         }
         .score-val { font-size: 1.5em; display: block; }
         .streak-fire { color: orange; }
@@ -52,220 +76,249 @@
             padding: 30px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
-            transition: transform 0.2s, background-color 0.2s;
-        }
-
-        h3 { margin-top: 0; color: var(--primary); }
-        .unit-badge {
-            background: #e0f2fe; color: #0369a1;
-            padding: 4px 8px; border-radius: 6px; font-size: 0.9em; font-weight: 600;
         }
 
         /* Inputs */
-        .input-group { margin-bottom: 15px; }
-        .input-label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #64748b; }
         input[type="text"] {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 18px;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; padding: 14px;
+            border: 2px solid #e2e8f0; border-radius: 10px;
+            font-size: 18px; outline: none; box-sizing: border-box;
+            margin-bottom: 10px;
         }
         input[type="text"]:focus { border-color: var(--primary); }
 
-        /* Buttons */
         button {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
+            width: 100%; padding: 15px;
+            background-color: var(--primary); color: white;
+            border: none; border-radius: 10px;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
         }
-        button:hover { filter: brightness(110%); }
-        .btn-next { background-color: var(--text); display: none; }
-
-        /* Feedback Visuals */
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-        }
-        .feedback.success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .feedback.error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-        /* ANIMATIONS AGRESSIVES */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .shake-animation {
-            animation: shake 0.5s;
-            border: 2px solid var(--danger) !important;
-            box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
-        }
+        button:hover { opacity: 0.9; }
+        .btn-continue { background-color: #334155; display: none; margin-top: 10px; }
 
         .hidden { display: none; }
         
-        /* DB Editor */
-        #db-editor { margin-top: 50px; border-top: 1px dashed #ccc; padding-top: 20px; }
-        textarea { width: 100%; height: 100px; font-family: monospace; }
+        /* Feedback */
+        .feedback {
+            margin-top: 20px; padding: 15px; border-radius: 8px; display: none;
+        }
+        .feedback.success { background: #dcfce7; color: #166534; }
+        .feedback.error { background: #fee2e2; color: #991b1b; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-animation { animation: shake 0.4s ease-in-out; border: 2px solid #ef4444 !important; }
+
+        .loading { font-style: italic; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    
-    <div class="score-board">
-        <div class="score-box">
-            <span>🔥 Série actuelle</span>
-            <span class="score-val streak-fire" id="current-streak">0</span>
-        </div>
-        <div class="score-box">
-            <span>🏆 Record</span>
-            <span class="score-val" id="high-score">0</span>
+
+    <div id="setup-screen" class="card">
+        <h1>EDN : Online Mode</h1>
+        <p>Préparez-vous à entrer dans l'arène.</p>
+        
+        <label style="display:block; text-align:left; font-weight:bold; margin-bottom:5px;">Votre Pseudo :</label>
+        <input type="text" id="pseudo-input" placeholder="Dr. House" maxlength="15">
+        
+        <button onclick="startGame()">Commencer la session</button>
+
+        <div class="leaderboard">
+            <h3>🌍 Top 10 Mondial</h3>
+            <div id="leaderboard-list">
+                <p class="loading">Chargement des scores...</p>
+            </div>
         </div>
     </div>
 
-    <div id="quiz-card" class="card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <small id="q-cat" style="color:#64748b; font-weight:bold; text-transform:uppercase;">Catégorie</small>
+    <div id="game-screen" class="hidden">
+        <div class="score-board">
+            <div class="score-box">
+                <span>🔥 Série</span>
+                <span class="score-val streak-fire" id="current-streak">0</span>
+            </div>
+            <div class="score-box">
+                <span>👤 Moi</span>
+                <span class="score-val" id="my-best">0</span>
+            </div>
+        </div>
+
+        <div id="quiz-card" class="card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <small id="q-cat" style="color:#64748b; font-weight:bold; text-transform:uppercase;">Catégorie</small>
+            </div>
+            
+            <h3 id="q-title" style="margin-top:0;">Chargement...</h3>
+            <span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:4px; font-size:0.9em;" id="q-unit">Unité</span>
+            <p style="font-size:0.9em; color:#666; margin-bottom:20px;">Entrez les valeurs (tolérance 1%)</p>
+
+            <div id="dynamic-inputs"></div>
+
+            <button id="btn-validate" onclick="validateAnswer()">VALIDER</button>
+            <button id="btn-continue" class="btn-continue" onclick="nextQuestion()">CONTINUER</button>
+
+            <div id="feedback-msg" class="feedback"></div>
         </div>
         
-        <h3 id="q-title">Chargement...</h3>
-        <span class="unit-badge" id="q-unit">Unité</span>
-        <p style="font-size:0.9em; color:#666; margin-bottom:20px;">Entrez les valeurs (tolérance 1%)</p>
-
-        <div id="dynamic-inputs"></div>
-
-        <button id="btn-validate" onclick="validateAnswer()">VALIDER</button>
-        <button id="btn-continue" class="btn-next" onclick="nextQuestion()">CONTINUER ➔</button>
-
-        <div id="feedback-msg" class="feedback"></div>
-    </div>
-
-    <div id="db-editor">
-        <button onclick="document.getElementById('editor-area').classList.toggle('hidden')" style="background:#64748b; font-size:14px; padding:8px;">⚙️ Modifier la base (JSON)</button>
-        <div id="editor-area" class="hidden">
-            <p>Format : <code>"targets": [nombre1, nombre2]</code>. Pour les intervalles, mettez les deux bornes.</p>
-            <textarea id="json-input"></textarea>
-            <button onclick="saveData()" style="background:#16a34a;">Sauvegarder</button>
-        </div>
+        <button onclick="location.reload()" style="background-color:#94a3b8; margin-top:20px;">Quitter / Revenir au menu</button>
     </div>
 
 </div>
 
-<script>
-    // --- NOUVELLE STRUCTURE DE DONNÉES ---
-    // "targets" contient les chiffres que le système va chercher dans la réponse.
-    // Si "inputs" contient plusieurs objets, on affiche plusieurs cases.
-    
-    const defaultData = [
-        // COMPLEXE (H/F)
-        { 
-            cat: "Hématologie", param: "Hémoglobine (Hb)", unit: "g/dL", 
-            inputs: [
-                { label: "Homme", targets: [13, 18] },
-                { label: "Femme", targets: [12, 16] }
-            ],
-            info: "Femme enceinte T2 > 10.5. Transfusion < 7."
-        },
-        { 
-            cat: "Rhumatologie", param: "Acide Urique", unit: "µmol/L", 
-            inputs: [
-                { label: "Homme", targets: [180, 420] },
-                { label: "Femme", targets: [150, 360] }
-            ],
-            info: "Seuil de saturation = 420 (68 mg/L)"
-        },
-        { 
-            cat: "Fer & Vitamines", param: "Ferritine", unit: "µg/L", 
-            inputs: [
-                { label: "Homme", targets: [30, 300] },
-                { label: "Femme", targets: [15, 200] }
-            ],
-            info: "Carence < 15. Inflammatoire > 100."
-        },
+<script type="module">
+    // ------------------------------------------------------------------
+    // 1. CONFIGURATION FIREBASE
+    // ------------------------------------------------------------------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // SIMPLE (Une seule case)
-        { cat: "Hématologie", param: "VGM", unit: "fL", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Micro < 80, Macro > 100" },
+    // --- COLLE TA CONFIG FIREBASE ICI (REMPLACE TOUT LE BLOC) ---
+    const firebaseConfig = {
+  apiKey: "AIzaSyBR8tntIiAHbdUNwE8rAeJj0yVxc3XwF9g",
+  authDomain: "normes-quiz.firebaseapp.com",
+  projectId: "normes-quiz",
+  storageBucket: "normes-quiz.firebasestorage.app",
+  messagingSenderId: "975453872619",
+  appId: "1:975453872619:web:70437a05c31d78ebab79ae"
+};
+    // -----------------------------------------------------------
+
+    // Initialisation
+    let db;
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("Firebase connecté !");
+        loadLeaderboard(); // Charger le top 10 au démarrage
+    } catch (e) {
+        console.error("Erreur Firebase (Avez-vous mis la config ?) :", e);
+        document.getElementById('leaderboard-list').innerHTML = "<p style='color:red'>Erreur de connexion base de données.<br>Vérifiez le code source.</p>";
+    }
+
+    // --- FONCTIONS ONLINE ---
+
+    // 1. Charger le Leaderboard
+    async function loadLeaderboard() {
+        if (!db) return;
+        const listDiv = document.getElementById('leaderboard-list');
+        
+        try {
+            const q = query(collection(db, "scores"), orderBy("score", "desc"), limit(10));
+            const querySnapshot = await getDocs(q);
+            
+            let html = "";
+            let rank = 1;
+            
+            if (querySnapshot.empty) {
+                html = "<p>Aucun score pour le moment. Soyez le premier !</p>";
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let medal = "";
+                    if (rank === 1) medal = "🥇";
+                    else if (rank === 2) medal = "🥈";
+                    else if (rank === 3) medal = "🥉";
+                    
+                    html += `
+                        <div class="lb-row">
+                            <span class="lb-rank">${medal || rank + '.'}</span>
+                            <span class="lb-name">${escapeHtml(data.pseudo)}</span>
+                            <span class="lb-score">${data.score}</span>
+                        </div>
+                    `;
+                    rank++;
+                });
+            }
+            listDiv.innerHTML = html;
+        } catch (e) {
+            console.error("Erreur lecture scores:", e);
+            listDiv.innerHTML = "<p>Impossible de charger les scores.</p>";
+        }
+    }
+
+    // 2. Sauvegarder un score
+    window.saveScoreToDb = async function(pseudo, score) {
+        if (!db) return;
+        // On ne sauvegarde que si le score est significatif (> 2) pour pas polluer la DB
+        if (score < 3) return; 
+
+        try {
+            await addDoc(collection(db, "scores"), {
+                pseudo: pseudo,
+                score: score,
+                date: new Date()
+            });
+            console.log("Score sauvegardé en ligne !");
+        } catch (e) {
+            console.error("Erreur sauvegarde:", e);
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return "Anonyme";
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+</script>
+
+<script>
+    // --- LOGIQUE DU JEU (LOCALE) ---
+    
+    // Données (Exhaustif pour test)
+const questions = [
+        { cat: "Hématologie", param: "Hémoglobine (Hb)", unit: "g/dL", inputs: [{ label: "Homme", targets: [13, 18] }, { label: "Femme", targets: [12, 16] }], info: "Anémie : <13 (H), <12 (F)." },
+        { cat: "Hématologie", param: "VGM", unit: "fL", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Microcytose < 80, Macrocytose > 100" },
         { cat: "Hématologie", param: "Plaquettes", unit: "G/L", inputs: [{ label: "Valeur", targets: [150, 400] }], info: "Thrombopénie < 150" },
-        { cat: "Hématologie", param: "Leucocytes", unit: "G/L", inputs: [{ label: "Valeur", targets: [4, 10] }], info: "" },
-        { cat: "Hématologie", param: "PNN", unit: "G/L", inputs: [{ label: "Valeur", targets: [1.5, 7] }], info: "Agranulocytose < 0.5" },
-        
-        { cat: "Hémostase", param: "TP", unit: "%", inputs: [{ label: "Valeur", targets: [70, 100] }], info: "Insuffisance hépatique < 50%" },
-        { cat: "Hémostase", param: "Fibrinogène", unit: "g/L", inputs: [{ label: "Valeur", targets: [2, 4] }], info: "" },
-        
+        { cat: "Hématologie", param: "Leucocytes", unit: "G/L", inputs: [{ label: "Valeur", targets: [4, 10] }], info: "PNN : 1.5 - 7 G/L" },
+        { cat: "Hémostase", param: "TP", unit: "%", inputs: [{ label: "Valeur", targets: [70, 100] }], info: "Insuffisance hépatique si < 50%" },
+        { cat: "Hémostase", param: "INR (Patient sain)", unit: "-", inputs: [{ label: "Valeur", targets: [1] }], info: "Cible AVK : 2-3" },
+        { cat: "Hémostase", param: "Fibrinogène", unit: "g/L", inputs: [{ label: "Valeur", targets: [2, 4] }], info: "CIVD si < 1" },
         { cat: "Ionogramme", param: "Sodium (Natrémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [135, 145] }], info: "Hyponatrémie grave < 120" },
-        { cat: "Ionogramme", param: "Potassium (Kaliémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [3.5, 4.5] }], info: "Parfois 5.0 max selon labo" },
-        { cat: "Ionogramme", param: "Calcium Total", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [2.20, 2.60] }], info: "Hypercalcémie menaçante > 3.0" },
-        { cat: "Ionogramme", param: "Bicarbonates", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [22, 28] }], info: "" },
-        
-        { cat: "Néphrologie", param: "Créatinine", unit: "µmol/L", inputs: [{ label: "Valeur", targets: [60, 110] }], info: "Dépend masse musculaire" },
-        { cat: "Néphrologie", param: "DFG (Normal)", unit: "mL/min", inputs: [{ label: "Seuil", targets: [90] }], info: "IRC < 60" },
-        
-        { cat: "Métabolisme", param: "Glycémie à jeun", unit: "g/L", inputs: [{ label: "Valeur", targets: [0.70, 1.10] }], info: "Diabète >= 1.26" },
-        { cat: "Métabolisme", param: "HbA1c (Normale)", unit: "%", inputs: [{ label: "Valeur", targets: [4, 6] }], info: "Diabète >= 6.5%" },
-        { cat: "Métabolisme", param: "Cholestérol Total", unit: "g/L", inputs: [{ label: "Seuil max", targets: [2.0] }], info: "" },
-        { cat: "Métabolisme", param: "HDL Cholestérol", unit: "g/L", inputs: [{ label: "Seuil min", targets: [0.40] }], info: "Protecteur > 0.60" },
-        
-        { cat: "Inflammation", param: "CRP", unit: "mg/L", inputs: [{ label: "Seuil", targets: [5] }], info: "Parfois < 10 selon labo" },
-        { cat: "Cardio", param: "BNP", unit: "ng/L", inputs: [{ label: "Seuil exclusion", targets: [100] }], info: "" },
-        
-        { cat: "GDS", param: "pH", unit: "-", inputs: [{ label: "Valeur", targets: [7.38, 7.42] }], info: "" },
+        { cat: "Ionogramme", param: "Potassium (Kaliémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [3.5, 4.5] }], info: "Hyperkaliémie menaçante > 6.0" },
+        { cat: "Ionogramme", param: "Calcium Total", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [2.20, 2.60] }], info: "Hypercalcémie > 2.60" },
+        { cat: "Ionogramme", param: "Bicarbonates (HCO3-)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [22, 28] }], info: "Acidose si < 22" },
+        { cat: "Néphrologie", param: "Créatinine", unit: "µmol/L", inputs: [{ label: "Valeur", targets: [60, 110] }], info: "Selon masse musculaire" },
+        { cat: "Néphrologie", param: "DFG", unit: "mL/min", inputs: [{ label: "Normal si >", targets: [90] }], info: "IRC < 60" },
+        { cat: "Hépato", param: "ASAT / ALAT", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [40] }], info: "Cytolyse > 1N" },
+        { cat: "Hépato", param: "Bilirubine Totale", unit: "µmol/L", inputs: [{ label: "Seuil max", targets: [17] }], info: "Ictère visible > 40" },
+        { cat: "Hépato", param: "Lipase", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [60] }], info: "Pancréatite si > 3N" },
+        { cat: "Métabolisme", param: "Glycémie à jeun", unit: "g/L", inputs: [{ label: "Valeur", targets: [0.70, 1.10] }], info: "Diabète si 1.26 (x2)" },
+        { cat: "Métabolisme", param: "HbA1c", unit: "%", inputs: [{ label: "Valeur", targets: [4, 6] }], info: "Diabète si > 6.5%" },
+        { cat: "Inflammation", param: "CRP", unit: "mg/L", inputs: [{ label: "Seuil max", targets: [5] }], info: "Sd Inflammatoire si > 5" },
+        { cat: "GDS", param: "pH artériel", unit: "-", inputs: [{ label: "Valeur", targets: [7.38, 7.42] }], info: "7.40 +/- 0.02" },
         { cat: "GDS", param: "PaO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Hypoxémie < 80" },
-        { cat: "GDS", param: "PaCO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [38, 42] }], info: "" },
-        
-        { cat: "Endocrino", param: "TSH", unit: "mUI/L", inputs: [{ label: "Valeur", targets: [0.4, 4.0] }], info: "" },
-        { cat: "Endocrino", param: "Vitamine D", unit: "ng/mL", inputs: [{ label: "Valeur", targets: [30, 60] }], info: "Carence < 10" },
-        
-        { cat: "Liquides", param: "LCR (Leucocytes)", unit: "Elts/mm³", inputs: [{ label: "Seuil", targets: [5] }], info: "Parfois < 10" },
-        { cat: "Liquides", param: "Liquide Articulaire", unit: "Elts/mm³", inputs: [{ label: "Seuil Inflam.", targets: [2000] }], info: "Septique > 50 000" }
+        { cat: "GDS", param: "PaCO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [38, 42] }], info: "Cible 40" },
+        { cat: "Endocrino", param: "TSH", unit: "mUI/L", inputs: [{ label: "Valeur", targets: [0.4, 4.0] }], info: "Hypothyroïdie > 4" },
+        { cat: "Liquides", param: "LCR (Protéinorachie)", unit: "g/L", inputs: [{ label: "Seuil max", targets: [0.45] }], info: "Hyperprotéinorachie > 0.45" }
     ];
 
-    // --- VARIABLES ---
-    let questions = [];
     let currentQ = null;
     let streak = 0;
-    let highScore = localStorage.getItem('edn_highscore') || 0;
+    let pseudo = "";
 
-    // --- INITIALISATION ---
-    window.onload = function() {
-        // Charger données
-        const stored = localStorage.getItem('edn_db_v2');
-        if (stored) {
-            questions = JSON.parse(stored);
-        } else {
-            questions = defaultData;
+    function startGame() {
+        const pInput = document.getElementById('pseudo-input');
+        if (pInput.value.trim().length < 2) {
+            alert("Entrez un pseudo valide !");
+            return;
         }
+        pseudo = pInput.value.trim();
         
-        // Afficher High Score
-        document.getElementById('high-score').innerText = highScore;
-        document.getElementById('json-input').value = JSON.stringify(questions, null, 2);
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
         
-        // Lancer
         nextQuestion();
-    };
+    }
+
+let questionPool = []; // Le sac de questions
 
     function nextQuestion() {
-        // Reset UI
+        // Reset de l'interface
         document.getElementById('quiz-card').classList.remove('shake-animation');
         document.getElementById('btn-validate').style.display = 'block';
         document.getElementById('btn-continue').style.display = 'none';
@@ -273,96 +326,69 @@
         document.getElementById('feedback-msg').className = 'feedback';
         document.getElementById('dynamic-inputs').innerHTML = '';
 
-        // Pick Random
-        currentQ = questions[Math.floor(Math.random() * questions.length)];
+        // Si le sac est vide, on le remplit et on le mélange
+        if (questionPool.length === 0) {
+            questionPool = [...questions];
+            // Mélange de Fisher-Yates
+            for (let i = questionPool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionPool[i], questionPool[j]] = [questionPool[j], questionPool[i]];
+            }
+        }
+
+        // On pioche la dernière question du sac
+        currentQ = questionPool.pop();
         
-        // Render
+        // Affichage de la question
         document.getElementById('q-cat').innerText = currentQ.cat;
         document.getElementById('q-title').innerText = currentQ.param;
         document.getElementById('q-unit').innerText = currentQ.unit;
 
-        // Generate Inputs
         const container = document.getElementById('dynamic-inputs');
         currentQ.inputs.forEach((inp, index) => {
             const group = document.createElement('div');
-            group.className = 'input-group';
-            
+            group.style.marginBottom = "10px";
             const label = document.createElement('label');
-            label.className = 'input-label';
             label.innerText = inp.label;
-            
+            label.style.display = "block";
+            label.style.fontWeight = "bold";
             const field = document.createElement('input');
             field.type = 'text';
             field.id = `input-${index}`;
-            field.placeholder = 'ex: 135 - 145';
             field.autocomplete = 'off';
-            
-            // Allow Enter key to validate
-            field.addEventListener("keypress", function(event) {
-                if (event.key === "Enter") validateAnswer();
-            });
-
+            field.addEventListener("keypress", (e) => { if (e.key === "Enter") validateAnswer(); });
             group.appendChild(label);
             group.appendChild(field);
             container.appendChild(group);
         });
-
-        // Focus first input
+        
         setTimeout(() => document.getElementById('input-0').focus(), 100);
     }
 
-    // --- MOTEUR DE VALIDATION ---
     function validateAnswer() {
         let allCorrect = true;
         let correctionHTML = "";
 
-        // Pour chaque champ de réponse (ex: Homme puis Femme)
         currentQ.inputs.forEach((inp, index) => {
             const userValStr = document.getElementById(`input-${index}`).value;
-            const userNumbers = extractNumbers(userValStr); // Array de nombres extraits
-            const targets = inp.targets; // Array de nombres attendus
-            
-            // Logic: Tous les nombres attendus doivent être trouvés dans la réponse utilisateur (avec tolérance)
-            // Si targets = [135, 145], l'user doit avoir tapé deux nombres proches de ça.
-            // Si targets = [5], l'user doit avoir tapé un nombre proche de 5.
+            const userNumbers = extractNumbers(userValStr);
+            const targets = inp.targets;
             
             let fieldCorrect = false;
             
             if (userNumbers.length >= targets.length) {
-                // On vérifie si chaque target a un "match" dans les inputs user
                 let matchesFound = 0;
                 targets.forEach(t => {
-                    const match = userNumbers.find(u => isCloseEnough(u, t));
-                    if (match !== undefined) matchesFound++;
+                    if (userNumbers.some(u => isCloseEnough(u, t))) matchesFound++;
                 });
-                
                 if (matchesFound === targets.length) fieldCorrect = true;
             }
 
             if (!fieldCorrect) allCorrect = false;
-            
-            // Préparer correction
-            correctionHTML += `<div><strong>${inp.label} :</strong> Attendu <b>${targets.join(' - ')}</b></div>`;
+            correctionHTML += `<div>${inp.label} : <b>${targets.join(' - ')}</b></div>`;
         });
 
         handleResult(allCorrect, correctionHTML);
-    }
-
-    // Extrait les nombres flottants d'une chaine (gère virgule et point)
-    function extractNumbers(str) {
-        if (!str) return [];
-        const normalized = str.replace(',', '.');
-        // Regex pour trouver les nombres (positifs ou négatifs, décimaux)
-        const matches = normalized.match(/-?\d+(\.\d+)?/g);
-        return matches ? matches.map(Number) : [];
-    }
-
-    // Vérifie tolérance 1%
-    function isCloseEnough(val, target) {
-        if (target === 0) return Math.abs(val) < 0.1;
-        const diff = Math.abs(val - target);
-        const tolerance = Math.abs(target * 0.01);
-        return diff <= tolerance; // ou tolerance minime
     }
 
     function handleResult(isSuccess, details) {
@@ -370,52 +396,43 @@
         fb.style.display = 'block';
 
         if (isSuccess) {
-            // SUCCESS
             streak++;
             document.getElementById('current-streak').innerText = streak;
-            if (streak > highScore) {
-                highScore = streak;
-                localStorage.setItem('edn_highscore', highScore);
-                document.getElementById('high-score').innerText = highScore;
-            }
+            document.getElementById('my-best').innerText = Math.max(streak, parseInt(document.getElementById('my-best').innerText));
             
             fb.className = 'feedback success';
             fb.innerHTML = `<strong>✅ Correct !</strong><br>${currentQ.info}`;
-            
-            // Passer direct à la suite après 1s ou bouton ?
-            // User veut valider auto. On affiche bouton continuer.
-            
         } else {
-            // ERROR
+            // SAUVEGARDE EN LIGNE (FIN DE SERIE)
+            if (window.saveScoreToDb && streak > 0) {
+                window.saveScoreToDb(pseudo, streak);
+            }
+            
             streak = 0;
             document.getElementById('current-streak').innerText = 0;
-            
-            // Animation Agressive
             document.getElementById('quiz-card').classList.add('shake-animation');
             
             fb.className = 'feedback error';
-            fb.innerHTML = `<strong>❌ Erreur !</strong><br>${details}<br><em>Note : ${currentQ.info}</em>`;
+            fb.innerHTML = `<strong>❌ Perdu !</strong><br>${details}<br><em>${currentQ.info}</em>`;
         }
 
-        // Switch Buttons
         document.getElementById('btn-validate').style.display = 'none';
         document.getElementById('btn-continue').style.display = 'block';
         document.getElementById('btn-continue').focus();
     }
 
-    // --- DB MANAGEMENT ---
-    function saveData() {
-        try {
-            const txt = document.getElementById('json-input').value;
-            const json = JSON.parse(txt);
-            localStorage.setItem('edn_db_v2', JSON.stringify(json));
-            alert("Base sauvegardée !");
-            location.reload();
-        } catch(e) {
-            alert("Erreur JSON : " + e);
-        }
+    function extractNumbers(str) {
+        if (!str) return [];
+        const normalized = str.replace(',', '.');
+        const matches = normalized.match(/-?\d+(\.\d+)?/g);
+        return matches ? matches.map(Number) : [];
     }
 
+    function isCloseEnough(val, target) {
+        if (target === 0) return Math.abs(val) < 0.1;
+        return Math.abs(val - target) <= Math.abs(target * 0.01);
+    }
 </script>
+
 </body>
 </html>
