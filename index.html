@@ -271,31 +271,58 @@
     
     // Données (Exhaustif pour test)
 const questions = [
-        { cat: "Hématologie", param: "Hémoglobine (Hb)", unit: "g/dL", inputs: [{ label: "Homme", targets: [13, 18] }, { label: "Femme", targets: [12, 16] }], info: "Anémie : <13 (H), <12 (F)." },
-        { cat: "Hématologie", param: "VGM", unit: "fL", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Microcytose < 80, Macrocytose > 100" },
-        { cat: "Hématologie", param: "Plaquettes", unit: "G/L", inputs: [{ label: "Valeur", targets: [150, 400] }], info: "Thrombopénie < 150" },
-        { cat: "Hématologie", param: "Leucocytes", unit: "G/L", inputs: [{ label: "Valeur", targets: [4, 10] }], info: "PNN : 1.5 - 7 G/L" },
-        { cat: "Hémostase", param: "TP", unit: "%", inputs: [{ label: "Valeur", targets: [70, 100] }], info: "Insuffisance hépatique si < 50%" },
-        { cat: "Hémostase", param: "INR (Patient sain)", unit: "-", inputs: [{ label: "Valeur", targets: [1] }], info: "Cible AVK : 2-3" },
-        { cat: "Hémostase", param: "Fibrinogène", unit: "g/L", inputs: [{ label: "Valeur", targets: [2, 4] }], info: "CIVD si < 1" },
-        { cat: "Ionogramme", param: "Sodium (Natrémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [135, 145] }], info: "Hyponatrémie grave < 120" },
-        { cat: "Ionogramme", param: "Potassium (Kaliémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [3.5, 4.5] }], info: "Hyperkaliémie menaçante > 6.0" },
-        { cat: "Ionogramme", param: "Calcium Total", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [2.20, 2.60] }], info: "Hypercalcémie > 2.60" },
-        { cat: "Ionogramme", param: "Bicarbonates (HCO3-)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [22, 28] }], info: "Acidose si < 22" },
-        { cat: "Néphrologie", param: "Créatinine", unit: "µmol/L", inputs: [{ label: "Valeur", targets: [60, 110] }], info: "Selon masse musculaire" },
-        { cat: "Néphrologie", param: "DFG", unit: "mL/min", inputs: [{ label: "Normal si >", targets: [90] }], info: "IRC < 60" },
-        { cat: "Hépato", param: "ASAT / ALAT", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [40] }], info: "Cytolyse > 1N" },
-        { cat: "Hépato", param: "Bilirubine Totale", unit: "µmol/L", inputs: [{ label: "Seuil max", targets: [17] }], info: "Ictère visible > 40" },
-        { cat: "Hépato", param: "Lipase", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [60] }], info: "Pancréatite si > 3N" },
-        { cat: "Métabolisme", param: "Glycémie à jeun", unit: "g/L", inputs: [{ label: "Valeur", targets: [0.70, 1.10] }], info: "Diabète si 1.26 (x2)" },
-        { cat: "Métabolisme", param: "HbA1c", unit: "%", inputs: [{ label: "Valeur", targets: [4, 6] }], info: "Diabète si > 6.5%" },
-        { cat: "Inflammation", param: "CRP", unit: "mg/L", inputs: [{ label: "Seuil max", targets: [5] }], info: "Sd Inflammatoire si > 5" },
-        { cat: "GDS", param: "pH artériel", unit: "-", inputs: [{ label: "Valeur", targets: [7.38, 7.42] }], info: "7.40 +/- 0.02" },
-        { cat: "GDS", param: "PaO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Hypoxémie < 80" },
-        { cat: "GDS", param: "PaCO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [38, 42] }], info: "Cible 40" },
-        { cat: "Endocrino", param: "TSH", unit: "mUI/L", inputs: [{ label: "Valeur", targets: [0.4, 4.0] }], info: "Hypothyroïdie > 4" },
-        { cat: "Liquides", param: "LCR (Protéinorachie)", unit: "g/L", inputs: [{ label: "Seuil max", targets: [0.45] }], info: "Hyperprotéinorachie > 0.45" }
-    ];
+    // --- HÉMATOLOGIE ---
+    { cat: "Hématologie", param: "Hémoglobine (Hb)", unit: "g/dL", inputs: [{ label: "Homme", targets: [13, 18] }, { label: "Femme", targets: [12, 16] }], info: "Femme enceinte (T2/T3) > 10.5. Anémie si < 13(H) ou 12(F)." },
+    { cat: "Hématologie", param: "VGM", unit: "fL", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Microcytose < 80, Macrocytose > 100." },
+    { cat: "Hématologie", param: "Réticulocytes", unit: "G/L", inputs: [{ label: "Valeur", targets: [20, 120] }], info: "Régénérative > 120, Arégénérative < 120 (si anémie)." },
+    { cat: "Hématologie", param: "Leucocytes (Total)", unit: "G/L", inputs: [{ label: "Valeur", targets: [4, 10] }], info: "Hyperleucocytose > 10. Leucopénie < 4." },
+    { cat: "Hématologie", param: "PNN (Polynucléaires Neutrophiles)", unit: "G/L", inputs: [{ label: "Valeur", targets: [1.5, 7] }], info: "Agranulocytose < 0.5. Neutropénie < 1.5." },
+    { cat: "Hématologie", param: "Plaquettes", unit: "G/L", inputs: [{ label: "Valeur", targets: [150, 400] }], info: "Thrombopénie < 150. Thrombocytose > 400." },
+
+    // --- HÉMOSTASE ---
+    { cat: "Hémostase", param: "TP (Taux de Prothrombine)", unit: "%", inputs: [{ label: "Valeur", targets: [70, 100] }], info: "Insuffisance hépatique ou AVK si diminué." },
+    { cat: "Hémostase", param: "Fibrinogène", unit: "g/L", inputs: [{ label: "Valeur", targets: [2, 4] }], info: "Syndrome inflammatoire si élevé. CIVD si < 1." },
+
+    // --- IONOGRAMME & BIOCHIMIE ---
+    { cat: "Iono", param: "Sodium (Natrémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [135, 145] }], info: "Hyponatrémie grave < 120. Hypernatrémie > 145." },
+    { cat: "Iono", param: "Potassium (Kaliémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [3.5, 4.5] }], info: "Hyperkaliémie menaçante > 6.0 ou signes ECG." },
+    { cat: "Iono", param: "Chlore", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [95, 105] }], info: "" },
+    { cat: "Iono", param: "Bicarbonates (HCO3-)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [22, 28] }], info: "Acidose métabolique si < 22." },
+    { cat: "Iono", param: "Calcium Total", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [2.2, 2.6] }], info: "Hypercalcémie > 2.6. Hypocalcémie < 2.2." },
+    { cat: "Iono", param: "Phosphore (Phosphatémie)", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [0.8, 1.4] }], info: "" },
+    
+    // --- FONCTION RÉNALE ---
+    { cat: "Néphro", param: "Créatinine (Homme)", unit: "µmol/L", inputs: [{ label: "Valeur", targets: [60, 110] }], info: "Variations selon la masse musculaire." },
+    { cat: "Néphro", param: "Créatinine (Femme)", unit: "µmol/L", inputs: [{ label: "Valeur", targets: [45, 90] }], info: "Variations selon la masse musculaire." },
+    { cat: "Néphro", param: "Urée", unit: "mmol/L", inputs: [{ label: "Valeur", targets: [2.5, 7.5] }], info: "" },
+
+    // --- GAZ DU SANG ---
+    { cat: "GDS", param: "pH artériel", unit: "-", inputs: [{ label: "Valeur", targets: [7.38, 7.42] }], info: "Acidémie < 7.38. Alcalémie > 7.42." },
+    { cat: "GDS", param: "PaO2 (Air ambiant)", unit: "mmHg", inputs: [{ label: "Valeur", targets: [80, 100] }], info: "Hypoxémie si < 80 mmHg." },
+    { cat: "GDS", param: "PaCO2", unit: "mmHg", inputs: [{ label: "Valeur", targets: [38, 42] }], info: "Hypocapnie < 38 (Hyperventilation)." },
+
+    // --- MÉTABOLISME ---
+    { cat: "Métabolisme", param: "Glycémie à jeun", unit: "g/L", inputs: [{ label: "Valeur", targets: [0.7, 1.1] }], info: "Diabète si >= 1.26 g/L (à 2 reprises)." },
+    { cat: "Métabolisme", param: "HbA1c (Normal)", unit: "%", inputs: [{ label: "Valeur", targets: [4, 6] }], info: "Cible diabétique souvent < 7%." },
+    { cat: "Métabolisme", param: "Cholestérol Total", unit: "g/L", inputs: [{ label: "Seuil max", targets: [2] }], info: "" },
+    { cat: "Métabolisme", param: "Triglycérides", unit: "g/L", inputs: [{ label: "Seuil max", targets: [1.5] }], info: "Risque de pancréatite si > 10 g/L." },
+
+    // --- BILAN HÉPATIQUE ---
+    { cat: "Hépato", param: "ASAT (TGO)", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [40] }], info: "Cytolyse si > N." },
+    { cat: "Hépato", param: "ALAT (TGP)", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [40] }], info: "Plus spécifique du foie que ASAT." },
+    { cat: "Hépato", param: "PAL (Phosphatases Alcalines)", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [100] }], info: "Cholestase si élevé." },
+    { cat: "Hépato", param: "Gamma-GT", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [50] }], info: "Élevé si alcool ou cholestase." },
+    { cat: "Hépato", param: "Bilirubine Totale", unit: "µmol/L", inputs: [{ label: "Seuil max", targets: [17] }], info: "Ictère clinique si > 40." },
+
+    // --- AUTRES ---
+    { cat: "Inflammation", param: "CRP", unit: "mg/L", inputs: [{ label: "Seuil max", targets: [5] }], info: "Syndrome inflammatoire si > 5." },
+    { cat: "Muscle", param: "CPK (Homme)", unit: "UI/L", inputs: [{ label: "Seuil max", targets: [170] }], info: "Rhabdomyolyse si élevé." },
+    { cat: "Fer", param: "Ferritine (Homme)", unit: "µg/L", inputs: [{ label: "Valeur", targets: [30, 300] }], info: "Carence si < 30." },
+    { cat: "Fer", param: "Ferritine (Femme)", unit: "µg/L", inputs: [{ label: "Valeur", targets: [15, 200] }], info: "Carence si < 15." }
+    { cat: "Liquides", param: "LCR (Protéinorachie)", unit: "g/L", inputs: [{ label: "Seuil max", targets: [0.45] }], info: "Hyperprotéinorachie > 0.45" }
+    { cat: "formules", param: "Posm", unit: "mOsm/ kgH2O", inputs: [{ label: "Formule ", targets: [2Na + Gly] }], info: "285 mOsm/kgH2O" },
+    { cat: "formules", param: "Calcémie corrigée", unit: "mmol/L", inputs: [{ label: "Formule ", targets: [2Na + Gly] }], info: "285 mOsm/kgH2O" },
+];
 
     let currentQ = null;
     let streak = 0;
